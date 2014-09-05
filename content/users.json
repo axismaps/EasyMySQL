@@ -1,0 +1,26 @@
+[
+    {
+        "UID": 1,
+        "username": "admin",
+        "password": "admin",
+        "email": "bob@example.com",
+        "project": "demo(localhost;root;root;demo),voyage(localhost;root;root;cap_voyage),axis(XCS2.host.cs.st-andrews.ac.uk;xcs2;DH9CtM3.;xcs2_db)",
+        "ifadmin": 1
+    },
+    {
+        "UID": 2,
+        "username": "user",
+        "password": "user",
+        "email": "joe@example.com",
+        "project": "axis(localhost;root;root;newproject),new(localhost;root;root;project_axis)",
+        "ifadmin": 0
+    },
+    {
+        "UID": 3,
+        "username": "a",
+        "password": "a",
+        "email": "a@example.com",
+        "project": "axis(localhost;root;root;newproject)",
+        "ifadmin": 0
+    }
+]

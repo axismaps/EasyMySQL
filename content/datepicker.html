@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Bootstrap Component Sample</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- jQuery -->
+		<script src="assets/jquery-1.10.2.min.js"></script>
+		<!-- Bootstrap -->
+		<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+		<link href="assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<!-- src -->
+		<script src="src/common/bootstrap-common.js"></script>
+		<script src="src/datepicker/bootstrap-datepicker.js"></script>
+		<link href="src/datepicker/bootstrap-datepicker.css" rel="stylesheet" media="screen">
+
+		<script>
+			$(document).ready(function(){
+				$("#appended_change").change(function(){
+					$("#lb_tips").html($(this).val());
+				});
+				
+				$("input").change(function() {
+					var my = $(this);
+                    alert( my.val());
+				});
+			});
+		</script>
+	</head>
+	<body>
+
+			<div class="input-group col-lg-3">
+				<input type="text" id="input_date" class="form-control">
+				<span class="input-group-btn">
+					<button class="btn btn-default" type="button"
+						data-toggle="datepicker"
+						data-type="date"
+						data-to="#input_date"
+						data-autoclose="true"
+					>
+						<span class="glyphicon glyphicon-calendar"></span>
+					</button>
+				</span>
+			</div>
+
+		<hr />
+
+
+
+
+
+
+		<div style="height: 2000px;"></div>
+	</body>
+</html>

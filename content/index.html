@@ -1,0 +1,1902 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>User</title>
+
+<!-- Styles for the demo -->
+<link href="./css/demo.css" rel="stylesheet" type="text/css" />
+<link href='http://fonts.googleapis.com/css?family=Bitter:400,700,400italic' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro' rel='stylesheet' type='text/css'>
+
+<!-- Add the datepicker stylesheet -->
+<link href="./css/datepicker.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="../slick.grid.css" type="text/css"/>
+<link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+<link rel="stylesheet" href="examples.css" type="text/css"/>
+<link href="src/datepicker/bootstrap-datepicker.css" rel="stylesheet" media="screen">
+<!--<link href="assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">-->
+<style>
+    .cell-title {
+        font-weight: bold;
+    }
+
+    .cell-effort-driven {
+        text-align: center;
+    }
+
+    .item-details-form {
+        z-index: 10000;
+        display: inline-block;
+        border: 1px solid black;
+        margin: 8px;
+        padding: 10px;
+        background: #efefef;
+        -moz-box-shadow: 0px 0px 15px black;
+        -webkit-box-shadow: 0px 0px 15px black;
+        box-shadow: 0px 0px 15px black;
+
+        position: absolute;
+        top: 10px;
+        left: 150px;
+    }
+
+    .item-details-form-buttons {
+        float: right;
+    }
+
+    .item-details-label {
+        margin-left: 10px;
+        margin-top: 20px;
+        display: block;
+        font-weight: bold;
+    }
+
+    .item-details-editor-container {
+        width: 200px;
+        height: 20px;
+        border: 1px solid silver;
+        background: white;
+        display: block;
+        margin: 10px;
+        margin-top: 4px;
+        padding: 0;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .cell-title {
+        font-weight: bold;
+    }
+
+    .cell-effort-driven {
+        text-align: center;
+    }
+    .modifiability {
+        background: lightgray;
+    }
+    html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+    }
+    button{
+        background:#fff;
+    }
+    a.active{
+        font-style: italic;
+        color:lightskyblue
+    }
+    a:hover {
+        color: deepskyblue;
+    }
+
+
+    html,body{font-size:12px;margin:0px;height:100%;}
+    .mesWindow{border:#666 1px solid;background:#fff;}
+    .mesWindowTop{border-bottom:#eee 1px solid;margin-left:4px;padding:3px;font-weight:bold;text-align:left;font-size:12px;}
+    .mesWindowContent{margin:4px;font-size:12px;}
+    .mesWindow .close{height:15px;width:28px;border:none;cursor:pointer;text-decoration:underline;background:#fff}
+
+    html,body
+    {
+        height: 100%;
+        margin: 0px;
+    }
+    .left
+    {
+        float: left;
+        height: 100%;
+        width: 50%;
+        background-color: #ffffff;
+    }
+    .right
+    {
+        float: right;
+        height: 100%;
+        width: 50%;
+        background-color: #ffffff;
+    }
+    .divtool
+    {
+        width: 100%;
+        height: 50%;
+        background:#ffffff;
+    }
+    .divcomment
+    {
+        width: 100%;
+        height: 50%;
+        background:#ffffff;
+    }
+</style>
+<script src="./js/lang/en.js"></script>
+<script src="./js/datepicker.js">{"describedby":"fd-dp-aria-describedby"}</script>
+<script src="../lib/firebugx.js"></script>
+<script src="../lib/jquery-1.7.min.js"></script>
+<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="assets/jquery-1.10.2.min.js"></script>
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="src/common/bootstrap-common.js"></script>
+<script src="src/datepicker/bootstrap-datepicker.js"></script>
+<script src="../lib/jquery.event.drag-2.2.js"></script>
+<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+
+<script src="../slick.core.js"></script>
+<script src="../plugins/slick.cellrangeselector.js"></script>
+<script src="../plugins/slick.cellselectionmodel.js"></script>
+<script src="../slick.formatters.js"></script>
+<script src="../slick.editors.js"></script>
+<script src="../slick.grid.js"></script>
+<script src="slick.compositeeditor.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+<script>
+    host = 'eddore.cs.st-andrews.ac.uk';
+    //host = 'localhost';
+	var post = 18020;
+
+    //script for google map
+	var tableid;
+    var isIe=(document.all)?true:false;
+    function setSelectState(state)
+    {
+        var objl=document.getElementsByTagName('select');
+        for(var i=0;i<objl.length;i++)
+        {
+            objl[i].style.visibility=state;
+        }
+    }
+    function mousePosition(ev)
+    {
+        if(ev.pageX || ev.pageY)
+        {
+            return {x:ev.pageX, y:ev.pageY};
+        }
+        return {
+            x:ev.clientX + document.body.scrollLeft - document.body.clientLeft,y:ev.clientY + document.body.scrollTop - document.body.clientTop
+        };
+    }
+
+    function showMessageBox(wTitle,content,pos,wWidth)
+    {
+        closeWindow();
+        var bWidth=parseInt(document.documentElement.scrollWidth);
+        var bHeight=parseInt(document.documentElement.scrollHeight);
+        if(isIe){
+            setSelectState('hidden');}
+        var back=document.createElement("div");
+        back.id="back";
+        var styleStr="top:0px;left:0px;position:absolute;background:#666;width:"+bWidth+"px;height:"+bHeight+"px;";
+        styleStr+=(isIe)?"filter:alpha(opacity=0);":"opacity:0;";
+        back.style.cssText=styleStr;
+        document.body.appendChild(back);
+        showBackground(back,50);
+        var mesW=document.createElement("div");
+        mesW.id="mesWindow";
+        mesW.className="mesWindow";
+        mesW.innerHTML="<div class='mesWindowTop'><table width='100%' height='100%'><tr><td>"+wTitle+"</td><td style='width:1px;'><input type='button' onclick='closeWindow();' title='title' class='close' value='close' /></td></tr></table></div><div class='mesWindowContent' id='mesWindowContent'>"+content+"</div><div class='mesWindowBottom'></div>";
+        styleStr="left:"+(((pos.x-wWidth)>0)?(pos.x-wWidth):pos.x)+"px;top:"+(pos.y)+"px;position:absolute;width:"+wWidth+"px;";
+        mesW.style.cssText=styleStr;
+        document.body.appendChild(mesW);
+    }
+    function showBackground(obj,endInt)
+    {
+        if(isIe)
+        {
+            obj.filters.alpha.opacity+=1;
+            if(obj.filters.alpha.opacity<endInt)
+            {
+                setTimeout(function(){showBackground(obj,endInt)},5);
+            }
+        }else{
+            var al=parseFloat(obj.style.opacity);al+=0.01;
+            obj.style.opacity=al;
+            if(al<(endInt/100))
+            {setTimeout(function(){showBackground(obj,endInt)},5);}
+        }
+    }
+
+    function closeWindow()
+    {
+        if(document.getElementById('back')!=null)
+        {
+            document.getElementById('back').parentNode.removeChild(document.getElementById('back'));
+        }
+        if(document.getElementById('mesWindow')!=null)
+        {
+            document.getElementById('mesWindow').parentNode.removeChild(document.getElementById('mesWindow'));
+        }
+        if(isIe){
+            setSelectState('');}
+    }
+    function testMessageBox(ev)
+    {
+        var objPos = mousePosition(ev);
+        var stringhtml = document.getElementById('innerhtml').innerHTML;
+        messContent="<div style='padding:20px 0 20px 0;text-align:center'>" +
+                "<div id=\"map-canvas\"></div>";
+        showMessageBox('v',stringhtml,objPos,350);
+
+    }
+    var markers = [];
+    var gallPetersMap;
+    var GALL_PETERS_RANGE_X = 800;
+    var grid2;
+    // Note: this value is inexact as the map is cut off at ~ +/- 83 degrees.
+    // However, the polar regions produce very little increase in Y range, so
+    // we will use the tile size.
+    var GALL_PETERS_RANGE_Y = 510;
+
+    function degreesToRadians(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    function radiansToDegrees(rad) {
+        return rad / (Math.PI / 180);
+    }
+
+    /**
+     * @constructor
+     * @implements {google.maps.Projection}
+     */
+    function GallPetersProjection() {
+
+        // Using the base map tile, denote the lat/lon of the equatorial origin.
+        this.worldOrigin_ = new google.maps.Point(GALL_PETERS_RANGE_X * 400 / 800,
+                GALL_PETERS_RANGE_Y / 2);
+
+        // This projection has equidistant meridians, so each longitude degree is a linear
+        // mapping.
+        this.worldCoordinatePerLonDegree_ = GALL_PETERS_RANGE_X / 360;
+
+        // This constant merely reflects that latitudes vary from +90 to -90 degrees.
+        this.worldCoordinateLatRange = GALL_PETERS_RANGE_Y / 2;
+    };
+
+    GallPetersProjection.prototype.fromLatLngToPoint = function(latLng) {
+
+        var origin = this.worldOrigin_;
+        var x = origin.x + this.worldCoordinatePerLonDegree_ * latLng.lng();
+
+        // Note that latitude is measured from the world coordinate origin
+        // at the top left of the map.
+        var latRadians = degreesToRadians(latLng.lat());
+        var y = origin.y - this.worldCoordinateLatRange * Math.sin(latRadians);
+
+        return new google.maps.Point(x, y);
+    };
+
+    GallPetersProjection.prototype.fromPointToLatLng = function(point, noWrap) {
+
+        var y = point.y;
+        var x = point.x;
+
+        if (y < 0) {
+            y = 0;
+        }
+        if (y >= GALL_PETERS_RANGE_Y) {
+            y = GALL_PETERS_RANGE_Y;
+        }
+
+        var origin = this.worldOrigin_;
+        var lng = (x - origin.x) / this.worldCoordinatePerLonDegree_;
+        var latRadians = Math.asin((origin.y - y) / this.worldCoordinateLatRange);
+        var lat = radiansToDegrees(latRadians);
+        return new google.maps.LatLng(lat, lng, noWrap);
+    };
+    function initialize() {
+        var gallPetersMapType = new google.maps.ImageMapType({
+            getTileUrl: function(coord, zoom) {
+                var numTiles = 1 << zoom;
+
+                // Don't wrap tiles vertically.
+                if (coord.y < 0 || coord.y >= numTiles) {
+                    return null;
+                }
+
+                // Wrap tiles horizontally.
+                var x = ((coord.x % numTiles) + numTiles) % numTiles;
+
+                // For simplicity, we use a tileset consisting of 1 tile at zoom level 0
+                // and 4 tiles at zoom level 1. Note that we set the base URL to a
+                // relative directory.
+                var baseURL = 'images/';
+                baseURL += 'gall-peters_' + zoom + '_' + x + '_' + coord.y + '.png';
+                return baseURL;
+            },
+            tileSize: new google.maps.Size(800, 512),
+            isPng: true,
+            minZoom: 0,
+            maxZoom: 1,
+            name: 'Gall-Peters'
+        });
+        gallPetersMapType.projection = new GallPetersProjection();
+        var mapOptions = {
+            zoom: 2,
+            center: new google.maps.LatLng(0, 0),
+            mapTypeControlOptions: {
+                mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'gallPetersMap']
+            }
+        };
+        gallPetersMap = new google.maps.Map(document.getElementById('map-canvas'),
+                mapOptions);
+
+        gallPetersMap.mapTypes.set('gallPetersMap', gallPetersMapType);
+
+        google.maps.event.addListener(gallPetersMap, 'click', function(e) {
+            addMarker(e.latLng);
+            var pp = new Array();
+            var focus = grid.getActiveCell();
+            pp = e.latLng.toString().split("(")[1].split(")")[0].split(",");
+            update(grid.getDataItem(grid.getActiveCell().row)[tableKeyName],""+pp[1]+"",table,
+                    "Longitude",thisstyle,thisaltid );
+            update(grid.getDataItem(grid.getActiveCell().row)[tableKeyName],""+pp[0]+"",table,
+                    "Latitude",thisstyle,thisaltid );
+
+        });
+    }
+
+    //function showAlert() {
+    //  window.alert('Point.X.Y: ' + event.latLng);
+    //}
+    function setAllMap(map) {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(map);
+        }
+    }
+    function addMarker(location) {
+        setAllMap(null);
+        var marker = new google.maps.Marker({
+            position: location,
+            map: gallPetersMap
+        });
+        markers.push(marker);
+
+    }
+
+    google.maps.event.addDomListener(window, 'load', initialize);
+    // end for script for google map
+
+    //script for datepicker
+    $(document).ready(function(){
+        $("#appended_change").change(function(){
+            $("#lb_tips").html($(this).val());
+        });
+
+        $("input").change(function() {
+            var my = $(this);
+            alert( my.val());
+        });
+    });
+    // end script for datepicker
+
+
+
+
+
+  </script>
+  <script id="itemDetailsTemplate" type="text/x-jquery-tmpl">
+  <div class='item-details-form'>
+    {{each columns}}
+    <div class='item-details-label'>
+      ${name}
+    </div>
+    <div class='item-details-editor-container' data-editorid='${id}'></div>
+    {{/each}}
+
+    <hr/>
+    <div class='item-details-form-buttons'>
+      <button data-action='save'>Save</button>
+      <button data-action='cancel'>Cancel</button>
+    </div>
+  </div>
+</script>
+
+  <script>
+  var  pageid;
+  var grid;
+  var userID = 1;
+  var tableKeyName;
+  //var table;
+  var tables = new Array();
+  var tablename;
+  var name;
+  var projectName;
+  var tid;
+  var columnforundo = new Array();
+  var gridforundo;
+  var oldphpath;
+  var columnNamesForUndo;
+  var userType;
+  var style;
+  var altID;
+  var thisstyle;
+  var thisaltid;
+  var firsttime = 0;
+  var grid1;
+  var grid2;
+  var main = 1;
+
+
+  //get paras from URL
+  function GetRequest() {
+      var url = location.search; //??url?"?"?????
+      var theRequest = new Object();
+      if (url.indexOf("?") != -1) {
+          var str = url.substr(1);
+          strs = str.split("&");
+          for (var i = 0; i < strs.length; i++) {
+              theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+          }
+      }
+      return theRequest;
+  }
+  //set value to dropdown list
+  // "typeArray" : values
+  function selectOption(typeArray){
+      var hairHtmls;
+      for(var i=0;i<typeArray.length;i++){
+          hairHtmls+='<option value="'+typeArray[i]+'" >'+typeArray[i]+'</option>';
+      }
+      return hairHtmls;
+  }
+  // Main()
+  window.onload=function()
+  {
+
+      //getDate();
+
+      var UID = 2;
+      var project = "axis";
+	  
+
+      var Request = new Object();
+      Request = GetRequest();
+      if(Request['uid']!=undefined) {
+          UID = Request['uid'];
+      }
+      if(Request['project']!=undefined) {
+          project = Request['project'];
+      }
+      if(Request['tid']!=undefined) {
+          tid = Request['tid'];
+          pageid = tid;
+      }
+	  if(Request['userType']!=undefined) {
+          userType = Request['userType'];
+      }
+      if(Request['style']!=undefined) {
+          style = Request['style'];
+      }
+      if(Request['altID']!=undefined) {
+          altID = Request['altID'];
+      }
+	  if(userType==1) {
+	  $("#adm").attr("style","display:block;");}
+      userID = UID;
+	  tableid = tid;
+      projectName = project;
+      $("#projectname").html('<h3>'+project+'</h3>');
+
+      if(!UID){
+          $( "#login").html('<p id = "out"><a href="/configuration.html">Home "log out"</a> |<a href="/login">Log In</a></p>');
+      }else{
+          $( "#login").html('<p id="in"><a href="/configuration.html?uid='+UID+'&projectName='+projectName+'">Home</a> |<a href="/account">Account</a> |<a href="/logout">Log Out</a></p>');
+          $.getJSON("../users.json",function(data){
+                      console.log( "JSON Data: " + data );
+                      $.each(data,function(infoIndex,json){
+                          if(json["UID"]==UID){
+                              name = json["username"];
+                              $( "#user").append("welcome : "+name+"");
+                          }
+                      });
+                      $.getJSON( "gettablesbyproject/"+projectName )
+                              .done(function( json ) {
+                                  var temp = "";
+                                  console.log( "JSON Data: " + json );
+                                  $.each(json, function(i, field) {
+                                      temp += ","+field.name;
+
+                                  });
+                                  temp = temp.substring(1);
+                                  tables =temp.split(",");
+                                  if(tables.length==0){
+                                      tables[0] = temp;
+                                  }
+                                  for(var i =0; i<tables.length; i++){
+                                      var myGrid = 10;
+
+                                          $( "#listTables").append("<li>" +
+                                                  "<a id=\"link"+(i)+"\" onclick=\"getTableByName("+i+","+myGrid+")\" ><h3>"+tables[i]+"</h3></a>" +
+                                                  "</li>");
+                                      $('#link'+(i)+'').click(function(){
+                                          for(var j =0; j<tables.length; j++) {
+                                              if(j!=i){
+                                                  $('#link'+(j)+'').removeClass('active');
+                                              }
+                                          }
+                                          $(this).addClass('active');
+                                      });
+                                  }
+                                  if(style=="up"&&altID!=undefined){
+                                      updown(tid);
+                                      getTableByName(tid,"myGrid");
+                                  }
+                                  else if(style=="lr"&&altID!=undefined){
+                                     lr(tid)
+                                      getTableByName(tid,"myGrid");
+                                  }
+                                  else
+                                  //alert();
+                                  getTableByName(tid,"myGrid");
+                              })
+                              .fail(function( jqxhr, textStatus, error ) {
+                                  var err = textStatus + ", " + error;
+                                  console.log( "Request Failed: " + err );
+                              });
+                  });
+
+      }
+
+  }
+ //insert a row: para: insert into table(para3) set field(para2) = value(para3)
+  function InsertByLong(field, value,table)
+  {
+      var t;
+      for(var i=0;i<tables.length ;i++)
+      {
+          if(tables[i].toString()==table)
+          {
+              t =i;
+              break;
+          }
+      }
+      $.ajax({
+
+          type: 'POST',
+
+          url: "/insert/"+field+"&"+value+"&"+table ,
+
+          success: window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+projectName+"&tid="+t+"&userType="+userType+"&style="+style+"&altID="+altID
+
+      });
+
+  }
+  //insert to udo list, used to realize function undo
+ function insert(field, value,table)
+ {
+
+
+     var t;
+     for(var i=0;i<tables.length ;i++)
+     {
+         if(tables[i].toString()==table)
+         {
+             t =i;
+             break;
+         }
+     }
+     $.ajax({
+
+         type: 'POST',
+
+         url: "/insertwhole/"+field+"&"+value+"&"+table ,
+
+         success: window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+projectName+"&tid="+t+"&userType="+userType+"&style="+style+"&altID="+altID
+
+     });
+
+ }
+//insert a row
+  function insertPH (field,table){
+      var t;
+      for(var i=0;i<tables.length ;i++)
+      {
+          if(tables[i].toString()==table)
+          {
+              t =i;
+              break;
+          }
+      }
+      $.ajax({
+
+          type: 'POST',
+
+          url: "/insph/"+field+"&"+table ,
+
+          success: window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+projectName+"&tid="+t+"&userType="+userType+"&style="+style+"&altID="+altID
+
+      });
+  }
+
+  //update database : update table(para3) set field(para4) = value(para2) where Key = id(para1)  ; style & altID for reload this page keeping the layout(right and left; or up and down)
+  function update(id,value,table,field,style,altID) {  //param field, value, and id. update the column named "filed" which is the item with id == "id", the new value is "value".;uerID,oldvValue
+      var t;
+      for(var i=0;i<tables.length ;i++)
+      {
+          if(tables[i].toString()==table)
+          {
+              t = i;
+              break;
+          }
+      }
+      $.ajax({
+
+          type: 'POST',
+
+          url: "/update/"+id+"&"+field+"&"+value+"&"+table+"&"+tableKeyName ,
+
+          success: window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+projectName+"&tid="+t+"&userType="+userType+"&style="+style+"&altID="+altID
+
+      });
+  }
+
+  //update inmage column
+  function updatePH(id,table,field,style,altID) {  //param field, value, and id. update the column named "filed" which is the item with id == "id", the new value is "value".;uerID,oldvValue
+      var t;
+      for(var i=0;i<tables.length ;i++)
+      {
+          if(tables[i].toString()==table)
+          {
+              t = i;
+              break;
+          }
+      }
+      $.ajax({
+
+          type: 'POST',
+
+          url: "/updateph/"+id+"&"+field+"&"+table+"&"+tableKeyName ,
+
+          success: window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+projectName+"&tid="+t+"&userType="+userType+"&style="+style+"&altID="+altID
+
+      });
+  }
+
+  // delete record
+  function del(){
+      var table = tables[tid];
+      var t;
+      for(var i=0;i<tables.length ;i++)
+      {
+          if(tables[i].toString()==table)
+          {
+              t =i;
+          }
+      }
+                  $.ajax({
+
+                      type: 'POST',
+                      url: "/delete/"+grid.getDataItem(grid.getActiveCell().row)[tableKeyName]+"&"+table ,
+                      success: window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+projectName+"&tid="+t+"&userType="+userType+"&style="+style+"&altID="+altID
+
+                  });
+  }
+
+  //validation functions
+  function requiredFieldValidator(value) {
+      if (value == null || value == undefined || !value.length) {
+          alert("This is a required field");
+          return {valid: false, msg: "This is a required field"};
+      } else {
+          return {valid: true, msg: null};
+      }
+  }
+
+  function NumberFieldValidator(value) {
+      if (isNaN(value)) {
+          alert("This is not a number");
+          return {valid: false, msg: "This is not a number"};
+      } else {
+          return {valid: true, msg: null};
+      }
+  }
+  function DateFieldValidator(value) {
+      var reg=/^\d{8}$/;
+      var r = value.match(reg);
+      if (r==null) {
+          alert("This is not a date");
+          return {valid: false, msg: "This is not a date"};
+      } else {
+          var month = value.toString().substring(4,2);
+          alert(month);
+          var day = value.toString().substring(6,2);
+          alert(day);
+          if(parseInt(month)<=12&&parseInt(day)<=31){
+              return {valid: true, msg: null};
+          }
+          else{
+              alert("This is not a date");
+              return {valid: false, msg: "This is not a date"};
+          }
+      }
+  }
+  function tagFieldValidator(value){
+
+
+  }
+  function requiredamdNumberFieldValidator(value){
+
+      if (value == null || value == undefined || !value.length||isNaN(value)) {
+          alert("This is a required and Number field");
+          return {valid: false, msg: "This is a required and Namber field"};
+      } else {
+          return {valid: true, msg: null};
+      }
+  }
+  function FloatFieldValidator (value){
+      var reg =/^(-?\d+)(\.\d+)?$/;//?????
+      var r = value.match(reg);
+      if (r==null) {
+          alert("This is a Float field");
+          return {valid: false, msg: "This is a required and Namber field"};
+      } else {
+          return {valid: true, msg: null};
+      }
+  }
+  function requiredamdFloatFieldValidator  (value){
+      var reg = /^(-?\d+)(\.\d+)?$/;//?????
+      var r = value.match(reg);
+      if (value == null || value == undefined || !value.length||r==null) {
+          alert("This is a required and Float field");
+          return {valid: false, msg: "This is a required and Float field"};
+      } else {
+          return {valid: true, msg: null};
+      }
+  }
+  function requiredamdURLFieldValidator(value){
+      var reg=/^http:\/\/[A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*$/;
+      var r = value.match(reg);
+      if (r==null ||value == null || value == undefined || !value.length) {
+          alert("This is a required and URL field");
+          return {valid: false, msg: "This is a required and Namber field"};
+      } else {
+          return {valid: true, msg: null};
+      }
+  }
+
+  function URLFieldValidator(value) {
+      var reg=/^http:\/\/[A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*$/;
+      var r = value.match(reg);
+      if (r==null) {
+          alert("This is not a url");
+          return {valid: false, msg: "This is not a date"};
+      } else {
+          return {valid: true, msg: null};
+      }
+  }
+
+  //end validation functions
+
+
+  //create grid;
+  //id: the id of current table
+  //:area : div id used for create a grid object
+  function getTableByName(id,area){
+
+      tableid = id;
+      tid = id;
+      thistable =tables[id];
+      tablename = tables[id];
+      if(area==10){
+          area = "myGrid";
+      }
+      var data = [];
+      var columns = new Array();
+      columnforundo = columns;
+      var colunmNames = new Array();
+      var options;
+      var v = new Array();
+      var iv = new Array();
+      var ref = new Array();
+      var refTable = new Array();
+	  var refCol = new Array();
+      var ifnull = new Array();
+      var image = new Array();
+
+
+      if(thistable==undefined)
+      $("#curTable").html("");
+      else{
+          $("#curTable").html("Current Table: "+thistable+"   <select id=\"mySelect\">");
+          $("#mySelect").html(selectOption(tables));
+
+          $("#mySelect").val(thistable);
+
+          $("#mySelect").change(function(){
+              var value = $('select#mySelect option:selected').text();
+              for(var j = 0; j<tables.length; j++) {
+                  if(tables[j]==value) {
+                      break;
+                  }
+              }
+              pageid = j;
+              main = 1;
+              getTableByName(j,"myGrid");
+
+          });
+      }
+
+      $.getJSON("getaddable/"+thistable )
+              .done(function( json ) {
+                  //console.log( "JSON Data: " + json );
+                  //lr(altID);
+                  var addable;
+                  $.each(json, function(i, field) {
+                      addable = field.addrow;
+
+                  });
+                  /*if(style=="up"||style=="lr") {
+                      options  = {
+                        enableColumnReorder:false
+                      }
+                  }
+                  else{*/
+                  //alert(area);
+                  //if(id !=  pageid||area!="myGrid"){
+                  if(main==0){
+
+                      options  = {
+                          editable: false,
+
+                          enableCellNavigation: true,
+                          enableColumnReorder: false,
+                          multiColumnSort: true,
+                          asyncEditorLoading: false,
+                          autoEdit: false,
+                          editCommandHandler: queueAndExecuteCommand,
+                          forceFitColumns: true
+                      };
+
+                  }
+                  else{
+                      if(addable ==0){
+                          options  = {
+                              editable: true,
+
+                              enableCellNavigation: true,
+                              enableColumnReorder: false,
+                              multiColumnSort: true,
+                              asyncEditorLoading: false,
+                              autoEdit: false,
+                              editCommandHandler: queueAndExecuteCommand,
+                              forceFitColumns: true
+                          };
+                      }
+                      else{
+                          options = {
+                              editable: true,
+                              enableAddRow: true,
+                              enableCellNavigation: true,
+                              enableColumnReorder: false,
+                              multiColumnSort: true,
+                              asyncEditorLoading: false,
+                              autoEdit: false,
+                              editCommandHandler: queueAndExecuteCommand,
+                              forceFitColumns: true
+                          };
+                      }
+                  }
+
+                /*  }*/
+
+
+                  $.getJSON( "getcolums/"+ thistable)
+                          .done(function( json ) {
+                              //console.log( "JSON Data: " + json );
+                              var j = 0;
+                              $.each(json, function(i, field){
+                                  refTable[i] = field.reference_table;
+								  refCol[i] = field.referent_col;
+                                  ref[i] = field.tag_reference;
+                                  ifnull[i] = field.verification;
+                                  colunmNames[i] = field.ColunmName;
+                                  image[i] = field.image_f;
+                                  var c = (columns[j] = {});
+
+                                  c["id"] = field.ColunmName;
+                                  c["name"] = field.ColunmName;
+                                  c["field"] = field.ColunmName;
+                                  if(field.modifiability==1){
+                                      switch(field.motifiable){
+                                          case "int":
+                                              c["editor"] =  TextEditor;
+                                              break;
+                                          case "float":
+                                              c["editor"] =  TextEditor;
+                                              break;
+                                          case "varchar":
+                                              c["editor"] =  TextEditor;
+                                              break;
+                                          case "longtext":
+                                              c["editor"] = LongTextEditor;
+                                              break;
+                                          case "date":
+                                              c["editor"] = NumericRangeEditor;
+                                              break;
+                                      }
+                                  }
+                                  if(field.modifiability==0){
+                                      c["cssClass"] = "modifiability";
+                                  }
+
+
+                                  switch(field.verification){
+                                      case "URL":
+                                          c["validator"] =  URLFieldValidator;
+                                          break;
+                                      case "required":
+                                          c["validator"] = requiredFieldValidator;
+                                          break;
+                                      case "required,URL":
+                                          c["validator"] = requiredamdURLFieldValidator;
+                                          break;
+                                      case "URL,required":
+                                          c["validator"] = requiredamdURLFieldValidator;
+                                          break;
+                                  }
+                                  if(field.tag_reference==1){
+                                      c["editor"] = tagFieldEditor;
+                                  }
+                                  if(field.image_f==1){
+                                      c["editor"] = imageFieldEditor;
+                                  }
+                                  if(field.motifiable=="int") {
+                                      if(field.verification=="required"){
+                                          c["validator"] = requiredamdNumberFieldValidator
+                                      }
+                                      else{
+                                          c["validator"] = NumberFieldValidator;
+                                      }
+                                  }
+                                  if(field.motifiable=="float") {
+                                      if(field.verification=="required"){
+                                          c["validator"] = requiredamdFloatFieldValidator
+                                      }
+                                      else{
+                                          c["validator"] = FloatFieldValidator;
+                                      }
+                                  }
+                                  if(j==0) {
+                                      c["width"] = 10;
+                                  }
+                                  j++;
+                              });
+                                      tableKeyName = colunmNames[0];
+                                      columnNamesForUndo  = colunmNames;
+
+                              // create Editors
+                              function imageFieldEditor (args) {
+                                  var $input, $wrapper;
+                                  var defaultValue;
+                                  var scope = this;
+                                  var path;
+                                  this.init = function () {
+                                      var $container = $("body");
+                                    $wrapper = $("<DIV style='z-index:10000;position:absolute;background:white;padding:5px;border:3px solid gray; -moz-border-radius:10px; border-radius:10px;'/>")
+                                              .appendTo($container);
+                                      $input = $("<input type=\"file\" name=\"myFile\" id=\"myFile\">")
+                                              .appendTo($wrapper);
+                                      $("<DIV style='text-align:right'><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></DIV>")
+                                              .appendTo($wrapper);
+                                      $wrapper.find("button:first").bind("click", this.save);
+                                      $wrapper.find("button:last").bind("click", this.cancel);
+
+                                      scope.position(args.position);
+                                      $input.focus().select();
+                                  };
+                                  this.save = function () {
+                                      $('div.progress').show();
+                                      var formData = new FormData();
+                                      var file = document.getElementById('myFile').files[0];
+                                      formData.append('myFile', file);
+                                      var xhr = new XMLHttpRequest();
+
+                                      xhr.open('post', '/', true);
+
+                                      xhr.upload.onprogress = function(e) {
+                                          if (e.lengthComputable) {
+                                              var percentage = (e.loaded / e.total) * 100;
+                                              $('div.progress div.bar').css('width', percentage + '%');
+                                          }
+                                      };
+
+                                      xhr.onerror = function(e) {
+
+                                      };
+
+                                      xhr.onload = function() {
+
+                                          //alert(xhr);
+                                          args.commitChanges();
+                                      };
+
+                                      xhr.send(formData);
+
+                                  };
+
+                                  this.cancel = function () {
+                                      //$input.val(defaultValue);
+                                      args.cancelChanges();
+                                  };
+
+                                  this.hide = function () {
+                                      $wrapper.hide();
+                                  };
+
+                                  this.show = function () {
+                                      $wrapper.show();
+                                  };
+
+                                  this.position = function (position) {
+                                      $wrapper
+                                              .css("top", position.top - 5)
+                                              .css("left", position.left - 5)
+                                  };
+
+                                  this.destroy = function () {
+                                      $wrapper.remove();
+                                  };
+
+                                  this.focus = function () {
+                                      $input.focus();
+                                  };
+
+                                  this.loadValue = function (item) {
+                                      oldphpath=item[args.column.field];
+                                      $input.val(defaultValue = item[args.column.field]);
+                                      $input.select();
+                                  };
+
+                                  this.serializeValue = function () {
+                                      return "imageValue";
+                                  };
+
+                                  this.applyValue = function (item, state) {
+                                      item[args.column.field] = state;
+                                  };
+
+                                  this.isValueChanged = function () {
+                                      return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+                                  };
+
+                                  this.validate = function () {
+                                      if (args.column.validator) {
+                                          var validationResults = args.column.validator($input.val());
+                                          if (!validationResults.valid) {
+                                              return validationResults;
+                                          }
+                                      }
+                                      return {
+                                          valid: true,
+                                          msg: null
+                                      };
+                                  };
+
+                                  this.init();
+                              }
+                              function tagFieldEditor(args) {
+
+                                  var $input;
+                                  var defaultValue;
+                                  var scope = this;
+
+                                  this.init = function () {
+                                      $input = $("<INPUT type=text class='editor-text' />")
+                                              .appendTo(args.container)
+                                              .focus()
+                                              .select();
+                                  };
+
+                                  this.destroy = function () {
+                                      $input.remove();
+                                  };
+
+                                  this.focus = function () {
+                                      $input.focus();
+                                  };
+
+                                  this.getValue = function () {
+                                      return $input.val();
+                                  };
+
+                                  this.setValue = function (val) {
+                                      $input.val(val);
+                                  };
+
+                                  this.loadValue = function (item) {
+                                      defaultValue = item[args.column.field] || "";
+                                      $input.val(defaultValue);
+                                      $input[0].defaultValue = defaultValue;
+                                      $input.select();
+                                      //alert(args.column.field);//
+                                      //alert(item["id"]);
+                                  };
+
+
+
+                                  this.applyValue = function (item, state) {
+                                      item[args.column.field] = state;
+                                  };
+
+                                  this.isValueChanged = function () {
+                                      return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+                                  };
+
+                                  this.validate = function () {
+
+
+
+                                      return {
+                                          valid: true,
+                                          msg: null
+                                      };
+                                  };
+                                  this.serializeValue = function () {
+                                      return  $input.val();
+                                  };
+                                  this.init();
+                              }
+                              function LongTextEditor (args) {
+                                  var $input, $wrapper;
+                                  var defaultValue;
+                                  var scope = this;
+
+                                  this.init = function () {
+                                      var $container = $("body");
+
+                                      $wrapper = $("<DIV style='z-index:10000;position:absolute;background:white;padding:5px;border:3px solid gray; -moz-border-radius:10px; border-radius:10px;'/>")
+                                              .appendTo($container);
+
+                                      $input = $("<TEXTAREA hidefocus rows=5 style='backround:white;width:250px;height:80px;border:0;outline:0'>")
+                                              .appendTo($wrapper);
+
+                                      $("<DIV style='text-align:right'><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></DIV>")
+                                              .appendTo($wrapper);
+
+                                      $wrapper.find("button:first").bind("click", this.save);
+                                      $wrapper.find("button:last").bind("click", this.cancel);
+                                  
+
+                                      scope.position(args.position);
+                                      $input.focus().select();
+                                  };
+
+
+
+                                  this.save = function () {
+                                      args.commitChanges();
+                                  };
+
+                                  this.cancel = function () {
+                                      $input.val(defaultValue);
+                                      args.cancelChanges();
+                                  };
+
+                                  this.hide = function () {
+                                      $wrapper.hide();
+                                  };
+
+                                  this.show = function () {
+                                      $wrapper.show();
+                                  };
+
+                                  this.position = function (position) {
+                                      $wrapper
+                                              .css("top", position.top - 5)
+                                              .css("left", position.left - 5)
+                                  };
+
+                                  this.destroy = function () {
+                                      $wrapper.remove();
+                                  };
+
+                                  this.focus = function () {
+                                      $input.focus();
+                                  };
+
+                                  this.loadValue = function (item) {
+                                      $input.val(defaultValue = item[args.column.field]);
+                                      $input.select();
+                                  };
+
+                                  this.serializeValue = function () {
+                                      return $input.val();
+                                  };
+
+                                  this.applyValue = function (item, state) {
+                                      item[args.column.field] = state;
+                                  };
+
+                                  this.isValueChanged = function () {
+                                      return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+                                  };
+
+                                  this.validate = function () {
+                                      if (args.column.validator) {
+                                          var validationResults = args.column.validator($input.val());
+                                          if (!validationResults.valid) {
+                                              return validationResults;
+                                          }
+                                      }
+                                      return {
+                                          valid: true,
+                                          msg: null
+                                      };
+                                  };
+
+                                  this.init();
+                              }
+                              function TextEditor(args) {
+                                  var $input;
+                                  var defaultValue;
+                                  var scope = this;
+
+                                  this.init = function () {
+                                      $input = $("<INPUT type=text class='editor-text' />")
+                                              .appendTo(args.container)
+                                              .focus()
+                                              .select();
+                                  };
+
+                                  this.destroy = function () {
+                                      $input.remove();
+                                  };
+
+                                  this.focus = function () {
+                                      $input.focus();
+                                  };
+
+                                  this.getValue = function () {
+                                      return $input.val();
+                                  };
+
+                                  this.setValue = function (val) {
+                                      $input.val(val);
+                                  };
+
+                                  this.loadValue = function (item) {
+                                      defaultValue = item[args.column.field] || "";
+                                      $input.val(defaultValue);
+                                      $input[0].defaultValue = defaultValue;
+                                      $input.select();
+                                      //alert(args.column.field);//
+                                      //alert(item["id"]);
+                                  };
+
+                                  this.serializeValue = function () {
+                                      return $input.val();
+                                  };
+
+                                  this.applyValue = function (item, state) {
+                                      item[args.column.field] = state;
+                                  };
+
+                                  this.isValueChanged = function () {
+                                      return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+                                  };
+
+                                  this.validate = function () {
+                                      if (args.column.validator) {
+                                          var validationResults = args.column.validator($input.val());
+                                          if (!validationResults.valid) {
+                                              return validationResults;
+                                          }
+                                      }
+
+                                      return {
+                                          valid: true,
+                                          msg: null
+                                      };
+                                  };
+
+                                  this.init();
+                              }
+
+                              function NumericRangeEditor(args) {
+                                  var $from;
+                                  var scope = this;
+                                  this.init = function () {
+                                      $from = $("<INPUT type=text style='width:100px' id=\"input_date\" />")
+                                              .appendTo(args.container)
+                                              .bind("keydown", scope.handleKeyDown);
+                                      $(args.container).append("<div class=\"input-group col-lg-3\">" +
+                                              "<span class=\"input-group-btn\">" +
+                                              "<button class=\"btn btn-default\" type=\"button\" data-toggle=\"datepicker\" data-type=\"date\" data-to=\"#input_date\" data-autoclose=\"true\"><img src=\"../images/calendar.gif\" align=\"absmiddle\" style=\"width: 20px; height: 20px\">" +
+                                              "<span class=\"glyphicon glyphicon-calendar\"></span></button></span></div>");
+                                  }
+
+                                  this.destroy = function () {
+                                      $(args.container).empty();
+                                  };
+                                  this.focus = function () {
+                                      $from.focus();
+                                  };
+                                  this.loadValue = function (item) {
+                                      //console.log(item[args.column.field]);
+                                      if(item[args.column.field]!=null){
+                                          $from.val(item[args.column.field].substring(0,10));
+                                      }
+                                      else $from.val(item[args.column.field]);
+
+
+                                  };
+                                  this.serializeValue = function () {
+                                      //return {from: $from.val()};
+                                      //alert("serializeValue"+$from.val());
+                                      return $from.val();
+                                  };
+
+                                  this.applyValue = function (item, state) {
+                                      //alert("applyValue"+state);
+                                      item[args.column.field] = state;
+                                  };
+                                  this.isValueChanged = function () {
+                                      //alert(args.item[args.column.field]+":"+$from.val());
+                                      if(args.item[args.column.field]!=null)
+                                      return args.item[args.column.field].substring(0,10) != $from.val();
+                                      else return args.item[args.column.field] != $from.val();
+                                  };
+                                  this.validate = function () {
+
+                                      if ($from.val().indexOf("/") >= 0) {
+                                          var date = new Array();
+                                          var reg1=/^\d{4}$/;
+                                          date = $from.val().split("/");
+                                          var maxdate = getValidDate(date[2],date[1]);
+                                          if(date[2].match(reg1)==null||isNaN(date[0])||isNaN(date[1])||isNaN(date[2])||parseInt(date[1])>12||parseInt(date[0])>maxdate||parseInt(date[1])<=0||parseInt(date[0])<=0){
+                                              return {valid: false, msg: "Please type in valid Date."};
+                                          }
+                                          else{
+                                              $from.val(date[2].toString()+date[1].toString()+date[0].toString());
+                                              return {valid: true, msg: null};
+                                          }
+                                      }
+                                      if($from.val().indexOf("-") >= 0){
+
+                                          var date = new Array();
+                                           date = $from.val().split("-");
+                                           var maxdate = getValidDate(date[0],date[1]);
+
+                                           if(isNaN(date[0])||isNaN(date[1])||isNaN(date[2])||parseInt(date[1])>12||parseInt(date[2])>maxdate||parseInt(date[1])<=0||parseInt(date[2])<=0){
+
+
+                                           return {valid: false, msg: "Please type in valid Date."};
+                                           }
+                                      }
+                                      else{
+                                          value = $from.val();
+                                          var reg=/^\d{8}$/;
+                                          var reg1=/^\d{4}$/;
+                                          var r = value.match(reg);
+                                          var month = value.toString().substring(6,4);
+                                          var day = value.toString().substring(8,6);
+                                          var maxdate = getValidDate(value.toString().substring(4,0),month);
+                                          if (r==null||parseInt(month)>12||parseInt(day)>maxdate) {
+                                              return {valid: false, msg: "Please type in valid Date."};
+
+                                          }
+
+                                      }
+
+
+                                      return {valid: true, msg: null};
+                                  };
+
+                                  this.init();
+
+                              }
+                              // end create Editors
+                              //get data and column for grid
+                              $.getJSON( "list/"+ thistable)
+                                      .done(function( json ) {
+                                          console.log( "JSON Data: " + json );
+
+
+                                          data = json;
+
+                                          grid = new Slick.Grid("#"+area+"", data, columns, options);
+
+                                          grid.onAddNewRow.subscribe(function (e, args) {
+                                              var item = args.item;
+                                              var column = args.column;
+                                              grid.invalidateRow(data.length);
+                                              data.push(item);
+                                              grid.updateRowCount();
+                                              grid.render();
+                                          });
+
+                                          //set grid functions such as onchange
+                                          grid.onValidationError.subscribe(function (e, args) {
+                                              // handle validation errors originating from the CompositeEditor
+                                              if (args.editor && (args.editor instanceof Slick.CompositeEditor)) {
+                                                  var err;
+                                                  var idx = args.validationResults.errors.length;
+                                                  while (idx--) {
+                                                      err = args.validationResults.errors[idx];
+                                                      $(err.container).stop(true, true).effect("highlight", {color: "red"});
+                                                  }
+                                              }
+                                          });
+                                          grid.onSort.subscribe(function (e, args) {
+                                              var cols = args.sortCols;
+
+                                              data.sort(function (dataRow1, dataRow2) {
+                                                  for (var i = 0, l = cols.length; i < l; i++) {
+                                                      var field = cols[i].sortCol.field;
+                                                      var sign = cols[i].sortAsc ? 1 : -1;
+                                                      var value1 = dataRow1[field], value2 = dataRow2[field];
+                                                      var result = (value1 == value2 ? 0 : (value1 > value2 ? 1 : -1)) * sign;
+                                                      if (result != 0) {
+                                                          return result;
+                                                      }
+                                                  }
+                                                  return 0;
+                                              });
+                                              grid.invalidate();
+                                              grid.render();
+                                          });
+                                          grid.onCellChange.subscribe(function(e,args){
+                                             var countries = new Array();
+                                             var tag = new Array();
+                                             var row = grid.getActiveCell().row;
+
+                                             var v= new Array();
+                                             var iv = new Array();
+                                             var vi=0;
+                                             var ivi = 0;
+
+                                             if(ref[args.cell]!=1){
+                                                 if(image[args.cell]!=1){ //average columns
+                                                     update(grid.getDataItem(args.row)[tableKeyName],grid.getDataItem(args.row)[columns[args.cell].field].replace(":","%3A").replace("/","%2F").replace("/","%2F"),thistable,
+                                                         columns[args.cell].name,thisstyle,thisaltid)}
+                                                 else {  //a image column
+                                                     updatePH(grid.getDataItem(args.row)[tableKeyName],thistable, columns[args.cell].name,thisstyle,thisaltid )
+                                                 }
+
+                                             }
+                                             else{           //a tag_reference column
+                                                 if(refTable[args.cell]==null||refTable[args.cell]==undefined||refCol[args.cell]==null||refCol[args.cell]==undefined) {
+                                                     alert("There is not table has been set");
+                                                 }
+                                                 else {
+                                                     tag =grid.getDataItem(args.row)[columns[args.cell].field].split(",");
+                                                     vName = refCol[args.cell];
+                                                     $.getJSON("getCountry/"+refTable[args.cell]+"&"+refCol[args.cell] )
+                                                             .done(function( json ) {
+                                                                 console.log(json);
+                                                                 console.log( "JSON Data: " + json );
+                                                                 for(var i=0;i<json.length;i++){
+                                                                     for(var key in json[i]){
+                                                                         countries[i] = json[i][key];
+                                                                     }
+                                                                 }
+
+                                                                 for(var i = 0 ; i<=tag.length-1; i++){
+                                                                     if(countries.indexOf(tag[i])>=0){
+                                                                         v[vi] = tag[i];
+                                                                         vi++;
+                                                                     }
+                                                                     else {
+                                                                         iv[ivi] = tag[i];
+                                                                         ivi++;
+                                                                     }
+                                                                 }
+                                                                 //alert(v);
+
+                                                                 if(v.length>0){
+
+                                                                     update(grid.getDataItem(args.row)[tableKeyName], v.toString(),thistable,
+                                                                             columns[args.cell].name,thisstyle,thisaltid );
+                                                                     if (iv.length>0) {
+                                                                         alert("The tag' "+iv+" 'does not exist in table '"+refTable[args.cell]+"'");
+
+                                                                     }else {
+                                                                         alert("your input "+ v +" is valid, Updating this row...");
+                                                                     }
+                                                                 }
+                                                                 else {
+                                                                     update(grid.getDataItem(args.row)[tableKeyName], "NULL",thistable,
+                                                                             columns[args.cell].name,thisstyle,thisaltid );
+                                                                     if (iv.length>0) {
+                                                                         alert("This is a tag field,' "+iv+" 'are not valid tag in lable '"+refTable[args.cell]+"'");
+
+                                                                     }else {
+                                                                         alert("your input "+ v +" is valid, Updating this row...");
+                                                                     }
+                                                                 }
+                                                             })
+                                                             .fail(function( jqxhr, textStatus, error ) {
+                                                                 var err = textStatus + ", " + error;
+                                                                 console.log( "Request Failed: " + err );
+
+                                                             });
+                                                 }
+
+                                             }
+
+                                          });
+
+                                          grid.onAddNewRow.subscribe(function(e,args){
+                                              var row = grid.getActiveCell().row;
+                                              var cell = grid.getActiveCell().cell
+
+                                              var countries = new Array();
+                                              var tag = new Array();
+                                              var row = grid.getActiveCell().row;
+
+                                              var v= new Array();
+                                              var iv = new Array();
+                                              var vi=0;
+                                              var ivi = 0;
+                                              var flag = 0;
+
+                                              if(flag==0){
+                                                 if(ref[cell]!=1){
+
+                                                     if(image[cell]!=1){ //average columns
+                                                         InsertByLong(columns[cell].name, grid.getDataItem(row)[columns[cell].field], thistable);}
+                                                     else {  //a image column
+                                                         insertPH(columns[cell].name, thistable);
+                                                     }
+                                                 }
+                                                 else{
+
+                                                     tag =grid.getDataItem(row)[columns[cell].field].split(",");
+                                                     $.getJSON("getCountry/"+refTable[cell]+"&"+refCol[cell] )
+                                                             .done(function( json ) {
+                                                                 console.log( "JSON Data: " + json );
+                                                                 console.log(json);
+                                                                 console.log( "JSON Data: " + json );
+                                                                 for(var i=0;i<json.length;i++){
+                                                                     for(var key in json[i]){
+                                                                         countries[i] = json[i][key];
+                                                                     }
+                                                                 }
+
+                                                                 for(var i = 0 ; i<=tag.length-1; i++){
+                                                                     if(countries.indexOf(tag[i])>=0){
+                                                                         v[vi] = tag[i];
+                                                                         vi++;
+                                                                     }
+                                                                     else {
+                                                                         iv[ivi] = tag[i];
+                                                                         ivi++;
+                                                                     }
+                                                                 }
+
+
+                                                                 if(v.length>0){
+
+                                                                     InsertByLong(columns[cell].name, v.toString(), thistable);
+                                                                     if (iv.length>0) {
+                                                                         alert("This is a tag field,' "+iv+" 'are not valid tag in lable '"+refTable[args.cell]+"'");
+
+                                                                     }
+                                                                     else {
+                                                                         alert("your input "+ v +" is valid, Creating a new row...");
+                                                                     }
+                                                                 }
+                                                                 else {
+                                                                     //alert(v);
+                                                                     //getTableByName(tid,"myGrid")
+                                                                     InsertByLong(columns[cell].name, "null", thistable);
+                                                                     if (iv.length>0) {
+                                                                         alert("This is a tag field,' "+iv+" 'are not valid tag in lable '"+refTable[cell]+"'");
+
+                                                                     } else {
+                                                                         alert("your input "+ v +" is valid, Creating a new row...");
+                                                                     }
+                                                                 }
+                                                             })
+                                                             .fail(function( jqxhr, textStatus, error ) {
+                                                                 var err = textStatus + ", " + error;
+                                                                 console.log( "Request Failed: " + err );
+
+                                                             });
+                                                 }
+                                             }
+                                              else {
+                                                 alert("This record can not be added");
+                                             }
+                                          });
+                                          grid.onClick.subscribe(function(e,args){
+                                              if(columns[grid.getActiveCell().cell].name=="Longitude"||columns[grid.getActiveCell().cell].name=="Latitude"){
+                                                  $("#map-canvas").attr("style","display:block;");
+                                              }
+                                              else if(columns[grid.getActiveCell().cell].name=="Date"){
+
+                                                  $("#map-canvas").attr("style","display: none;");
+                                              }
+                                              else{
+                                                  $("#map-canvas").attr("style","display: none;");
+                                              }
+                                          });
+                                          grid.setActiveCell(0, 0);
+                                          gridforundo = grid;
+                                          if(main== 0){
+
+                                              getTableByName(pageid,"myGrid");
+                                              main = 1;
+                                          }
+                                       /*   if(style=="up"||style=="lr"){
+                                              var grid1;
+                                              var data1 = [];
+                                              var columns1 = [
+                                                  {id: "title", name: "Title", field: "title"},
+                                                  {id: "desc", name: "Description", field: "description"},
+                                                  {id: "duration", name: "Duration", field: "duration"},
+                                                  {id: "%", name: "% Complete", field: "percentComplete"},
+                                                  {id: "start", name: "Start", field: "start"},
+                                                  {id: "finish", name: "Finish", field: "finish"},
+                                                  {id: "effort-driven", name: "Effort Driven"}
+                                              ];
+
+                                              var options1 = {
+
+                                                    enableColumnReorder:false
+
+
+
+                                              };
+
+                                              $(function () {
+                                                  for (var i = 0; i < 500; i++) {
+                                                      var d = (data1[i] = {});
+
+                                                      d["title"] = "Task " + i;
+                                                      d["description"] = "This is a sample task description.\n  It can be multiline";
+                                                      d["duration"] = "5 days";
+                                                      d["percentComplete"] = Math.round(Math.random() * 100);
+                                                      d["start"] = "01/01/2009";
+                                                      d["finish"] = "01/05/2009";
+                                                      d["effortDriven"] = (i % 5 == 0);
+                                                  }
+
+                                                  grid1 = new Slick.Grid("#otherGrid", data1, columns1, options1);
+                                              })
+                                          }
+
+*/
+                                      })
+
+                                      .fail(function( jqxhr, textStatus, error ) {
+                                          var err = textStatus + ", " + error;
+                                          console.log( "Request Failed: " + err );
+                                      });
+                          })
+                          .fail(function( jqxhr, textStatus, error ) {
+
+                              console.log( "Request Failed: " + err );
+                          });
+              })
+              .fail(function( jqxhr, textStatus, error ) {
+                  var err = textStatus + ", " + error;
+                  console.log( "Request Failed: " + err );
+              });
+
+
+
+  }
+
+  function getValidDate(year,month) {
+      switch(month){
+          case "01":
+              return 31;
+              break;
+          case "02":
+              if(((year%4)==0)&&((year%100)!=0)||((year%400)==0)){
+                  return 29;
+              }else{
+                  return 28;
+          }
+
+              break;
+          case "03":
+              return 31;
+              break;
+          case "04":
+              return 30;
+              break;
+          case "05":
+              return 31;
+              break;
+          case "06":
+              return 30;
+              break;
+          case "07":
+              return 31;
+              break;
+          case "08":
+              return 31;
+              break;
+          case "09":
+              return 30;
+              break;
+          case "10":
+              return 31;
+              break;
+          case "11":
+              return 30;
+              break;
+          case "12":
+              return 31;
+              break;
+      }
+  }
+
+
+  function dateFormatter(row, cell, value, columnDef, dataContext) {
+      return value.getMonth() + '/' + value.getDate() + '/' + value.getFullYear();
+  }
+
+  var commandQueue = [];
+
+  function queueAndExecuteCommand(item, column, editCommand) {
+
+      /*$.ajax({
+
+          type: 'POST',
+
+          url: "/undo/"+userID+"&"+tablename+"&"+"update"+"&"+columnNamesForUndo[editCommand.cell]+"&"+editCommand.prevSerializedValue+"&"+editCommand.serializedValue+"&"+grid.getDataItem(editCommand.row)[tableKeyName]
+
+
+      });*/
+      commandQueue.push(editCommand);
+      editCommand.execute();
+
+  }
+
+
+  function undo() {
+      $.getJSON("getdo/"+userID )
+              .done(function( json ) {
+                  console.log( "JSON Data: " + json );
+                  if(json.cmd=="update") {
+                      update(json.tid, json.oldValue,json.table,json.column,thisstyle,thisaltid );
+                  }
+                  else if(json.cmd=="insert") {
+                      insert(json.column, json.oldValue,json.table);
+                  }
+              })
+              .fail(function( jqxhr, textStatus, error ) {
+                  var err = textStatus + ", " + error;
+                  console.log( "Request Failed: " + err );
+
+              });
+  }
+function lr(id) {
+    main = 0;
+    style = "lr";
+    altID = id;
+    thisstyle = "lr";
+    thisaltid = id;
+    var table = tables[id];
+    getTableByName(id,"otherGrid");
+    $("#othertablename").html('<button onclick="updown(tid)"><img src="../images/ud.png" align="absmiddle" style="width: 20px; height: 20px"></button><button onclick="lr(tid)"><img src="../images/lr.png" align="absmiddle" style="width: 20px; height: 20px"></button><button onclick="tt(tid)"><img src="../images/tt.png" align="absmiddle" style="width: 20px; height: 20px"></button>');
+    $("#change").html('<div class="left"><div id="myGrid" style="left:0%;height:100%;"></div></div><div class="right"><div id="otherGrid" style="left:0%;height:100%;"></div></div>');
+    $("#right").html("<select id=\"rightddl\"/>")
+    $("#rightddl").html(selectOption(tables));
+
+    $("#rightddl").val(table);
+
+    $("#rightddl").change(function(){
+        var value = $('select#rightddl option:selected').text();
+        for(var j = 0; j<tables.length; j++) {
+            if(tables[j]==value) {
+                break;
+            }
+        }
+        main = 0;
+        getTableByName(j,"otherGrid");
+
+    });
+}
+
+  function tt(id) {
+      main = 1;
+      style = "";
+      altID = id;
+      thisstyle = "tt";
+      thisaltid = id;
+      var table = tables[id];
+      getTableByName(id,"myGrid");
+
+      $("#othertablename").html('<button onclick="updown(tid)"><img src="../images/ud.png" align="absmiddle" style="width: 20px; height: 20px"></button><button onclick="lr(tid)"><img src="../images/lr.png" align="absmiddle" style="width: 20px; height: 20px"></button><button onclick="tt(tid)"><img src="../images/tt.png" align="absmiddle" style="width: 20px; height: 20px"></button>');
+      $("#change").html('<div id="myGrid" style="left:0%;height:100%;"></div>');
+
+  }
+  function updown(id) {
+      main = 0;
+      style = "up";
+      altID = id;
+      thisstyle = "up";
+      thisaltid = id;
+      var table = tables[id];
+      getTableByName(id,"otherGrid");
+
+      $("#othertablename").html('<button onclick="updown(tid)"><img src="../images/ud.png" align="absmiddle" style="width: 20px; height: 20px"></button><button onclick="lr(tid)"><img src="../images/lr.png" align="absmiddle" style="width: 20px; height: 20px"></button><button onclick="tt(tid)"><img src="../images/tt.png" align="absmiddle" style="width: 20px; height: 20px"></button>');
+      $("#change").html('<div class="divtool"><div id="myGrid" style="left:0%;height:100%;"></div></div><div class="divcomment"><div id="otherGrid" style="left:0%;height:100%;"></div></div>');
+
+  }
+  function redirection () {
+
+//?uid="+userID+"&project="+projectName+"&tid="+t
+  
+	window.location.href="http://"+host+":"+post+"/admin.html?tid="+tableid+"&project="+projectName+"&uid="+userID
+}
+  </script>
+
+</head>
+<body>
+<script src="./js/jquery-1.9.1.min.js"></script>
+<script src="./js/bootstrap.min.js"></script>
+<script src="./js/script.js"></script>
+<div id="map-canvas" style="display: none"></div>
+<div id="datepicker" align="center" style="display: none;">
+
+
+</div>
+<div style="position:relative;top:0px;left:0px;width:100%;height:5%;background-color:gray;">
+    <div id = "systemName" style="width:10%;float:left;"><img src="../images/easymysql.png" alt="Smiley face" width="92" height=20%></div>
+    <div id = "user" style="width:50%;float:left;font-style: italic;font-size: 15px; display: inline;"></div>
+    <div id="othertablename" style="width:20%;float:right"><button onclick="updown(tid)"><img src="../images/ud.png" align="absmiddle" style="width: 20px; height: 20px"></button>
+        <button onclick="lr(tid)"><img src="../images/lr.png" align="absmiddle" style="width: 20px; height: 20px"></button>
+        <button onclick="tt(tid)"><img src="../images/tt.png" align="absmiddle" style="width: 20px; height: 20px"></button></div>
+    <div id="login" style="width:10%;display: inline;"></div>
+</div>
+<div style="position:absolute;top:5%;left:0px;width:10%;height:95%;background-color:lightgray;">
+    <h2 style="font-weight: bold">Current Project:</h2>
+    <div id="projectname" style="font-style: italic"></div>
+    <h5></h5>
+    <h2 style="font-weight: bold">Tables:</h2>
+    <ul id = "listTables"></ul>
+    <h5></h5>
+    <h2 style="font-weight: bold">Operations:</h2>
+   <!-- <button onclick="undo()"><img src="../images/arrow_undo.png" align="absmiddle" style="width: 20px; height: 20px"> Undo</button>-->
+    <button onclick="del()"><img src="../images/del.jpg" align="absmiddle" style="width: 20px; height: 20px">delete</button>
+	<div id = "adm" style="display: none;">
+	<button onclick="redirection()"><img src="../images/set.png" align="absmiddle" style="width: 20px; height: 20px"> Set Table Constraints</button>
+    </div>
+</div>
+<div style="position:absolute;top:5%;left:10%;height:95%;width:90%;background-color: aliceblue" >
+    <div style="position:relative;top:0px;left:0px;width:90%;height:30px;background-color: aliceblue ">
+        <div id="curTable" style="width:50%;font-style: italic; display: inline;margin-right:300px"></div>
+        <div id = "right" style="width:50%;font-style: italic; display: inline;margin-right:300px"></div>
+
+    </div>
+    <div id ="change" style="position:relative;top:0px;left:2%;width:95%;height:90%;background-color:papayawhip">
+        <div id="myGrid" style="left:0%;height:100%;width:100%;"></div>
+
+    </div>
+</div>
+
+
+<div>
+    <div><a href="#none" onclick="testMessageBox(event);">a</a></div>
+
+</div>
+</body>
+</html>

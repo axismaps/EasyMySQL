@@ -1,0 +1,804 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>admin</title>
+  <link rel="stylesheet" href="../slick.grid.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+  <link rel="stylesheet" href="examples.css" type="text/css"/>
+    <style type="text/css">
+        html,body
+        {
+            height: 100%;
+            margin: 0px;
+        }
+        .left
+        {
+            float: left;
+            height: 100%;
+            width: 10%;
+            background:#aaa;
+        }
+        .right
+        {
+            float: right;
+            height: 100%;
+            width: 90%;
+            background:#bbb;
+        }
+        .divtool
+        {
+            width: 100%;
+            height: 15%;
+            background:#aaa;
+        }
+        .divcomment
+        {
+            width: 100%;
+            height: 85%;
+            background:#bbb;
+        }
+    </style>
+</head>
+<body>
+<script src="../lib/firebugx.js"></script>
+<script src="../lib/jquery-1.7.min.js"></script>
+<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../lib/jquery.event.drag-2.2.js"></script>
+<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+<script src="../slick.core.js"></script>
+<script src="../plugins/slick.cellrangeselector.js"></script>
+<script src="../plugins/slick.cellselectionmodel.js"></script>
+<script src="../slick.formatters.js"></script>
+<script src="../slick.editors.js"></script>
+<script src="../slick.grid.js"></script>
+<script src="slick.compositeeditor.js"></script>
+<script>
+
+//get paras from URL
+function GetRequest() {
+    var url = location.search;
+    var theRequest = new Object();
+    if (url.indexOf("?") != -1) {
+        var str = url.substr(1);
+        strs = str.split("&");
+        for (var i = 0; i < strs.length; i++) {
+            theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+        }
+    }
+    return theRequest;
+}
+
+//main()
+    host = 'eddore.cs.st-andrews.ac.uk';
+    //host = 'localhost';
+	var post = 18020;
+    var modification = new Array();
+    var verification = new Array();
+    var countries = new Array();
+	var refColumn = new Array();
+    var tableid;
+    var projectName = "";
+    var tables = new Array();
+    var uid = 0;
+    var tableName ;
+    var colunmName ;
+	var jsonpp = [];
+
+//main()
+    window.onload=function()
+    {
+
+
+
+        var tid = 0;
+        var Request = new Object();
+        Request = GetRequest();
+        if(Request['project']!=undefined) {
+            projectName = Request['project'];
+        }
+        if(Request['uid']!=undefined) {
+            uid = Request['uid'];
+            $( "#login").html('<p id="in"><a href="/configuration.html?uid='+uid+'&projectName='+projectName+'">Home</a> |<a href="/account">Account</a> |<a href="/logout">Log Out</a></p>');
+        }
+        if(Request['tid']!=undefined) {
+            tid = Request['tid'];
+			tableid = tid;
+        }
+
+
+        if(uid==0){
+            $( "#login").html('<p id = "out"><a href="/">Home</a> |<a href="/login">Log In</a></p>');
+        }
+        $( "#tables").html('');
+        $.getJSON( "gettablesbyproject/"+projectName )
+                .done(function( json ) {
+                    var temp = "";
+                    console.log( "JSON Data: " + json );
+                    $.each(json, function(i, field) {
+                        temp += ","+field.name;
+
+                    });
+                    temp = temp.substring(1);
+                    tables =temp.split(",");
+                    if(tables.length==0){
+                        tables[0] = temp;
+                    }
+                    for(var i =0; i<tables.length; i++){
+
+                        $( "#tables").append("<li><button onclick=\"getColunms("+i+")\">"+tables[i]+"</button></li>");
+                    }
+                    getColunms(tid);
+                })
+                .fail(function( jqxhr, textStatus, error ) {
+                    var err = textStatus + ", " + error;
+                    console.log( "Request Failed: " + err );
+                });
+
+
+    }
+
+    //get data , id: table id
+    function getColunms(id) {
+
+	
+        tableid = id;
+
+        $( "#tablename").html('');
+        $("#div1").empty();
+        $( "#tablename").append("<h2>Current table : "+tables[id]+"</h2>");
+        $("#tid").val(id);
+        var name;
+        name = tables[id];
+		$.getJSON("getallcolums/")
+            .done(function( json ) {
+            console.log( "JSON Data: " + json );
+            $.each(json, function(i, field) {
+                refColumn[i] = field.ColunmName;
+				var obj = {
+				id : field.tableName,
+				name : field.ColunmName 
+				};
+				jsonpp.push(obj);
+            });
+			
+			
+            $.getJSON("listmod/" )
+                .done(function( json ) {
+                    console.log( "JSON Data: " + json );
+                    $.each(json, function(i, field) {
+                        modification[i] = field.name;
+                    });
+                    $.getJSON("gettablesbyproject/"+projectName)
+                            .done(function( json ) {
+                                console.log( "JSON Data: " + json );
+                                $.each(json, function(i, field) {
+
+                                    countries[i] = field.name;
+									
+
+                                });
+                                $.getJSON("listver/")
+                                        .done(function( json ) {
+                                            console.log( "JSON Data: " + json );
+                                            $.each(json, function(i, field) {
+                                                verification[i] = field.name;
+                                            });
+                                            $.getJSON("getcolums/"+name )
+                                                    .done(function( json ) {
+                                                        console.log( "JSON Data: " + json );
+                                                        $.each(json, function(i, field) {
+                                                            var newRow="<tr><td>"+field.ColunmName+"</td>" +
+                                                                    "<td><input type=\"radio\" name=\"rd"+(i)+"\" id=\"rd"+(i)+"\" value='0'/>No" +
+                                                                    "<input type=\"radio\" name=\"rd"+(i)+"\" id=\"rd"+(i)+"\" value='1'/>Yes"+
+                                                                    "</td>" +
+                                                                    "<td><select id=\"mySelect"+(i)+"\">" +
+                                                                    "</td>" +
+                                                                    "<td><div id = \"containerId"+(i)+"\">" +
+                                                                    "</div></td>" +
+                                                                    "<td><input type=\"text\"   id = \"default"+(i)+"\" />" +  //onblur=\"upDefault("+(field.CID)+","+(id)+","+(i)+")\"
+                                                                    "</td>" +
+                                                                    "<td><input type=\"radio\" name=\"rf"+(i)+"\" id=\"rf"+(i)+"\" value='0'/>No" +
+                                                                    "<input type=\"radio\" name=\"rf"+(i)+"\" id=\"rf"+(i)+"\" value='1'/>Yes"+
+                                                                    "</td>" +
+                                                                    "<td><select id=\"myCountries"+(i)+"\">" +
+                                                                    "</td>" +
+																	"<td><select id=\"myRefColumn"+(i)+"\">" +
+                                                                    "</td>" +
+                                                                    "<td><input type=\"radio\" name=\"if"+(i)+"\" id=\"if"+(i)+"\" value='0'/>No" +
+                                                                    "<input type=\"radio\" name=\"if"+(i)+"\" id=\"if"+(i)+"\" value='1'/>Yes"+
+                                                                    "</td>" +
+                                                                    "</tr>";
+
+                                                            $('#mytable').append(newRow);
+                                                            $("input[name='rd"+(i)+"']:radio[value='"+field.modifiability+"']").attr('checked','true');
+                                                            $("input[name='rd"+(i)+"']").change(function(){
+                                                                var value = $("input[name='rd"+(i)+"']:checked").val();
+                                                                updateModifiability(field.CID, value, id);
+                                                            });
+
+                                                            $("#mySelect"+(i)).html(selectOption(modification));
+                                                            $("#mySelect"+(i)).attr("value",field.motifiable);
+                                                            $("#mySelect"+(i)).change(function(){
+                                                                var value = $('select#mySelect'+(i)+' option:selected').text();
+                                                                if(field.verification!=null&&field.verification.indexOf("URL")>=0){
+                                                                     alert("This is an URL column, can not input int type");
+                                                                }
+                                                                else
+                                                                   updateModifiable(field.CID, value, id,field.ColunmName, field.tableName);
+                                                            });
+
+
+                                                            var vel;
+                                                            if(field.verification!==null){
+                                                                vel = field.verification.split(",");
+                                                                for(var q = 0 ; q < verification.length ; q++){
+                                                                    if(vel.indexOf(verification[q])!=-1){
+                                                                        $('#containerId'+(i))
+                                                                                .append(
+                                                                                        "<input type=\"checkbox\" id=\"checkbox"+(q)+"\" name=\"test\" onclick=\"myfunction("+field.CID+","+q+","+id+")\" value=\""+verification[q]+"\"  checked =\"true\" />"+verification[q]+""
+                                                                                );
+                                                                    }
+                                                                    else{
+                                                                        $('#containerId'+(i))
+                                                                                .append(
+                                                                                        "<input type=\"checkbox\" id=\"checkbox"+(q)+"\" name=\"test\" onclick=\"myfunction("+field.CID+","+q+","+id+")\" value=\""+verification[q]+"\" />"+verification[q]+""
+                                                                                );
+                                                                    }
+                                                                }
+                                                            }
+                                                            else{
+                                                                for(var q = 0 ; q < verification.length ; q++){
+                                                                    $('#containerId'+(i))
+                                                                            .append(
+                                                                                    "<input type=\"checkbox\" id=\"checkbox"+(q)+"\" name=\"test\" onclick=\"myfunction("+field.CID+","+q+","+id+")\" value=\""+verification[q]+"\" />"+verification[q]+""
+                                                                            );
+                                                                }
+                                                            }
+
+                                                            $("#default"+(i)).val(field.defaultVa);
+                                                            if(field.modifiability==0){
+                                                                $("#default"+(i)).attr("disabled",true);
+                                                            }
+
+                                                            $("#default"+(i)).blur(function(){
+                                                                //alert($("#default"+(i)).val());
+                                                                value = $("#default"+(i)).val();
+                                                                value = value.replace("/","%2F").replace("/","%2F");
+                                                                if(value!=field.defaultVa){
+                                                                    if(value==""){
+                                                                        //value = null;
+                                                                        alter(id,field.tableName,field.ColunmName,value,field.CID,field.motifiable);
+                                                                    }
+                                                                    else
+                                                                        alter(id,field.tableName,field.ColunmName,value,field.CID, field.motifiable);
+                                                                }
+
+                                                            });
+
+
+                                                            $("input[name='rf"+(i)+"']:radio[value='"+field.tag_reference+"']").attr('checked','true');
+                                                            $("input[name='rf"+(i)+"']").change(function(){
+                                                                var value = $("input[name='rf"+(i)+"']:checked").val();
+                                                                updateKey(field.CID,value,"easymysql_colunm","tag_reference","CID",id )
+                                                            });
+
+                                                            $("#myCountries"+(i)).html(selectOption(countries));
+                                                            $("#myCountries"+(i)).attr("value",field.reference_table);
+                                                            var newColumn1 = new Array();
+                                                            var a = 0;
+                                                            for(key in jsonpp){
+                                                                if(jsonpp[key].id == field.reference_table)
+                                                                {
+                                                                    newColumn1[a] = jsonpp[key].name;
+                                                                    a++;
+                                                                }
+                                                            }
+                                                            $("#myCountries"+(i)).change(function(){
+                                                                var newColumn = new Array();
+                                                                var a = 0;
+                                                                for(key in jsonpp){
+                                                                    if(jsonpp[key].id == $('select#myCountries'+(i)+' option:selected').text())
+                                                                    //alert(jsonpp[key].name)
+                                                                    {
+                                                                        newColumn[a] = jsonpp[key].name;
+                                                                        a++;
+                                                                    }
+                                                                }
+                                                                $("#myRefColumn"+(i)).html("");
+                                                                $("#myRefColumn"+(i)).html(selectOption(newColumn));
+                                                            });
+
+                                                            $("#myRefColumn"+(i)).html(selectOption(newColumn1));
+                                                            $("#myRefColumn"+(i)).attr("value",field.referent_col);
+
+
+                                                            $("#myRefColumn"+(i)).change(function(){
+                                                                var value1 = $('select#myCountries'+(i)+' option:selected').text();
+                                                                var value2 = $('select#myRefColumn'+(i)+' option:selected').text();
+                                                                updateRef(field.CID,value1,value2,"easymysql_colunm","reference_table","referent_col","CID",id );
+                                                            });
+
+                                                            if(field.tag_reference==0){
+                                                                $("#myCountries"+(i)).attr("disabled",true);
+                                                                $("#myRefColumn"+(i)).attr("disabled",true);
+                                                            }
+
+                                                            $("input[name='if"+(i)+"']:radio[value='"+field.image_f+"']").attr('checked','true');
+                                                            $("input[name='if"+(i)+"']").change(function(){
+                                                                var value = $("input[name='if"+(i)+"']:checked").val();
+                                                                updateKey(field.CID,value,"easymysql_colunm","image_f","CID",id )
+                                                            });
+                                                        });
+
+                                                        $.getJSON("getaddable/"+name )
+                                                                .done(function( json ) {
+                                                                    console.log( "JSON Data: " + json );
+                                                                    $.each(json, function(i, field) {
+                                                                        var addRow="<tr>" +
+                                                                                "<td>New rows can be created in this table<input type=\"radio\" name=\"added"+(id)+"\"  value='0'/>No" +
+                                                                                "<input type=\"radio\" name=\"added"+(id)+"\"  value='1'/>Yes"+
+                                                                                "</td>" +
+                                                                                "</tr>";
+
+                                                                        $('#mytable').append(addRow);
+                                                                        $("input[name='added"+(id)+"']:radio[value='"+field.addrow+"']").attr('checked','true');
+                                                                        $("input[name='added"+(id)+"']").change(function(){var value = $("input[name='added"+(id)+"']:checked").val();updateAddable(name, value,id);});
+
+                                                                    });
+                                                                })
+                                                                .fail(function( jqxhr, textStatus, error ) {
+                                                                    var err = textStatus + ", " + error;
+                                                                    console.log( "Request Failed: " + err );
+                                                                });
+                                                    })
+
+                                                    .fail(function( jqxhr, textStatus, error ) {
+                                                        var err = textStatus + ", " + error;
+                                                        console.log( "Request Failed: " + err );
+                                                    });
+
+                                        })
+                                        .fail(function( jqxhr, textStatus, error ) {
+                                            var err = textStatus + ", " + error;
+                                            console.log( "Request Failed: " + err );
+                                        });
+                            })
+                            .fail(function( jqxhr, textStatus, error ) {
+                                var err = textStatus + ", " + error;
+                                console.log( "Request Failed: " + err );
+                            });
+
+
+                })
+                .fail(function( jqxhr, textStatus, error ) {
+                    var err = textStatus + ", " + error;
+                    console.log( "Request Failed: " + err );
+                });
+
+        })
+        .fail(function( jqxhr, textStatus, error ) {
+            var err = textStatus + ", " + error;
+            console.log( "Request Failed: " + err );
+        });
+
+       
+    }
+    //Get default Value of filed(p1) from table(p2)
+    function getDefaultVal(colN,tableN){
+        $.getJSON("getdefault/"+colN+"&"+tableN )
+                .done(function( json ) {
+                    console.log( "JSON Data: " + json );
+                    $.each(json, function(i, field) {
+                         return field.defval;
+                    });
+                })
+                .fail(function( jqxhr, textStatus, error ) {
+                    var err = textStatus + ", " + error;
+                    console.log( "Request Failed: " + err );
+                });
+    }
+    // update default Value
+    function upDefault(CID,id,value) {
+
+
+                        $.ajax({
+                            type: 'POST',
+
+                            url: "/updatedef/"+CID+"&"+value,
+
+                            success: getColunms(id)
+
+                        });
+
+
+    }
+
+    // Alter Table
+    function alter(id,tableName,colunmName,value,CID,type){
+        if(type=="int"){
+            if(!isNaN(value)){
+			if(value.length==0){
+			$.ajax({
+
+                    type: 'POST',
+
+                    url: "/alter/"+tableName+"&null&"+colunmName+"&"+CID, //:tableName&:value&:colunmName
+
+                    success: getColunms(id)
+
+                });}
+				else{
+				$.ajax({
+
+                    type: 'POST',
+
+                    url: "/alter/"+tableName+"&"+value+"&"+colunmName+"&"+CID, //:tableName&:value&:colunmName
+
+                    success: getColunms(id)
+
+                });
+				}
+            }
+            
+			else{
+                alert("Input is not legal!");
+            }
+        }
+        else if(type=="date") {
+            var date = value.toString().substring(0,10);
+            var   reg   =   /^(\d{4})-(\d{2})-(\d{2})$/;
+            var   str   =   date;
+            var   arr   =  value.split("-");
+            if   (value.match(reg)&&arr[1]<=12&&arr[2]<=getValidDate(arr[1],arr[2])){
+
+                $.ajax({
+
+                    type: 'POST',
+
+                    url: "/alter/"+tableName+"&"+value+"&"+colunmName+"&"+CID, //:tableName&:value&:colunmName
+
+                   success: getColunms(id)
+
+                });
+            }
+            else if(value.length==0){
+		
+			$.ajax({
+
+                    type: 'POST',
+
+                    url: "/alter/"+tableName+"&"+null+"&"+colunmName+"&"+CID, //:tableName&:value&:colunmName
+
+					success: getColunms(id)
+
+
+                });
+			}
+			else{ 
+			    alert("Input is not legal!");
+
+            }
+
+        } else {
+		if(value.length==0){
+			$.ajax({
+
+                    type: 'POST',
+
+                    url: "/alter/"+tableName+"&null&"+colunmName+"&"+CID, //:tableName&:value&:colunmName
+
+                    success: getColunms(id)
+
+                });}
+		else{
+		$.ajax({
+
+                type: 'POST',
+
+                url: "/alter/"+tableName+"&"+value+"&"+colunmName+"&"+CID, //:tableName&:value&:colunmName
+
+				success: getColunms(id)
+
+            });
+		}
+		
+            
+        }
+
+
+    }
+function getValidDate(year,month) {
+    switch(month){
+        case "01":
+            return 31;
+            break;
+        case "02":
+            if(((year%4)==0)&&((year%100)!=0)||((year%400)==0)){
+                return 29;
+            }else{
+                return 28;
+            }
+
+            break;
+        case "03":
+            return 31;
+            break;
+        case "04":
+            return 30;
+            break;
+        case "05":
+            return 31;
+            break;
+        case "06":
+            return 30;
+            break;
+        case "07":
+            return 31;
+            break;
+        case "08":
+            return 31;
+            break;
+        case "09":
+            return 30;
+            break;
+        case "10":
+            return 31;
+            break;
+        case "11":
+            return 30;
+            break;
+        case "12":
+            return 31;
+            break;
+    }
+}
+    function myfunction(id, value,tid) {
+        var arr = new Array();
+        var ver;
+        var newVerification = "";
+        var ifint;
+        $.getJSON("getcolumbyid/"+id )
+                .done(function( json ) {
+                    console.log( "JSON Data: " + json );
+                    $.each(json, function(i, field) {
+                        ver = field.verification;
+                        ifint = field.motifiable;
+                    });
+                    if(ver!=null){
+                        arr = ver.split(",");
+                    }
+                    else{
+                        ver = "";
+                    }
+
+                    if(arr.indexOf(verification[value])!=-1){
+                        //arr.splice(arr.indexOf(verification[value]),1)
+                        for(var i = 0; i < arr.length; i++){
+                            if(arr[i]!=verification[value]){
+                                newVerification += arr[i]+",";
+                            }
+
+                        }
+
+                    }
+                    else{
+                        newVerification = ver+","+verification[value];
+                    }
+                    if(newVerification.substring(0,1)==","){
+                        newVerification = newVerification.substring(1,newVerification.length);
+                    }
+                    else if(newVerification.substring(newVerification.length-1,newVerification.length)==","){
+                        newVerification = newVerification.substring(0,newVerification.length-1);
+                    }else if(newVerification.length==0){
+                        newVerification="%20";
+                    }
+                    if(ifint!="int")
+                    updateVerification(id, newVerification,tid);
+                    else{
+                        if(newVerification.indexOf("URL")<0){
+                            updateVerification(id, newVerification,tid);
+                        }
+                        else {
+                            alert("This is a int Column, can not input a URL data");
+                            window.location.href="http://"+host+":"+post+"/admin.html?tid="+tid+"&project="+projectName+"&uid="+uid
+                        }
+                    }
+                })
+                .fail(function( jqxhr, textStatus, error ) {
+                    var err = textStatus + ", " + error;
+                    console.log( "Request Failed: " + err );
+                });
+
+
+
+
+    }
+    function selectOption(typeArray){
+        var hairHtmls;
+        for(var i=0;i<typeArray.length;i++){
+            hairHtmls+='<option value="'+typeArray[i]+'" >'+typeArray[i]+'</option>';
+        }
+        return hairHtmls;
+    }
+function updateKey(id,value,table,field,key,tid) {  //param field, value, and id. update the column named "filed" which is the item with id == "id", the new value is "value".
+
+    $.ajax({
+
+        type: 'POST',
+
+        url: "/updatekey/"+id+"&"+field+"&"+value+"&"+table+"&"+key ,
+
+        success: window.location.href="http://"+host+":"+post+"/admin.html?tid="+tid+"&project="+projectName+"&uid="+uid
+
+    });
+}
+//updateRef(field.CID,value1,value2,"easymysql_colunm","reference_table","referent_col","CID",id );
+function updateRef(id,value,altvalue,table,field,altfield,key,tid) {  //param field, value, and id. update the column named "filed" which is the item with id == "id", the new value is "value".
+    $.ajax({
+
+        type: 'POST',
+
+        url: "/updateRef/"+id+"&"+field+"&"+altfield+"&"+value+"&"+altvalue+"&"+table+"&"+key ,
+
+        success: window.location.href="http://"+host+":"+post+"/admin.html?tid="+tid+"&project="+projectName+"&uid="+uid
+
+    });
+}
+    function updateModifiable(id, value,tid,columnName, tableName){
+        var records = new Array();
+        var flag = 0;
+        $.getJSON("getrecords/"+tableName+"&"+columnName )
+                .done(function( json ) {
+                   /* if(value == "int"){*/
+                    for(var i=0;i<json.length;i++){
+                        for(var key in json[i]){
+                                if(value=="int"){
+                                if(isNaN(json[i][key])){
+                                    i=json.length+2;
+                                    break;
+                                }
+                            }
+                            else if(value=="date") {
+                                var date = json[i][key].toString().substring(0,10);
+
+                                    var   reg   =   /^(\d{4})-(\d{2})-(\d{2})$/;
+                                    var   str   =   date;
+                                    var   arr   =   reg.exec(str);
+                                    if   (!reg.test(str)&&RegExp.$2<=12&&RegExp.$3<=31){
+                                        i=json.length+2;
+                                        break;
+
+                                    }
+                            } else if(value=="float"){
+                                    var reg=/^[0-9]*\.?[0-9]*$/;
+                                    if(!reg.test(json[i][key])){
+                                         i=json.length+2;
+                                      break;
+
+                                       }
+                               }else if(value=="varchar"){
+                                      if(json[i][key]!=null&&json[i][key].length>255){
+
+                                              i=json.length+2;
+                                              break;
+
+                                      }
+                                }
+                        }
+
+                    }
+
+                    if(i<json.length+2) {
+                        $.ajax({
+
+                            type: 'POST',
+
+                            url: "/updatemod/"+id+"&"+value ,
+
+                            success:modifyTableType(tableName,columnName,value,tid)
+
+
+                        });
+
+                    }
+                    else{
+                        alert("There are data in the database are invalid!");
+                    }
+
+                })
+                .fail(function( jqxhr, textStatus, error ) {
+                    var err = textStatus + ", " + error;
+                    console.log( "Request Failed: " + err );
+
+                });
+
+    }
+
+function modifyTableType(tableName, columnName, newType,tid) {
+        $.ajax({
+
+            type: 'POST',
+
+            url: "/modifyColumnType/"+tableName+"&"+columnName +"&"+newType,
+
+            success: window.location.href="http://"+host+":"+post+"/admin.html?tid="+tid+"&project="+projectName+"&uid="+uid
+
+
+        });
+    }
+    function updateVerification(id, value,tid){
+
+        $.ajax({
+
+            type: 'POST',
+
+            url: "/updatever/"+id+"&"+value ,
+
+            success: window.location.href="http://"+host+":"+post+"/admin.html?tid="+tid+"&project="+projectName+"&uid="+uid
+
+
+        });
+    }
+    function updateModifiability(id, value,tid){
+
+        $.ajax({
+
+            type: 'POST',
+
+            url: "/updatmodb/"+id+"&"+value ,
+
+            //success: getColunms(uid,tid)
+            success: window.location.href="http://"+host+":"+post+"/admin.html?tid="+tid+"&project="+projectName+"&uid="+uid
+
+        });
+    }
+    function updateAddable(name, value,tid){
+
+        $.ajax({
+
+            type: 'POST',
+
+            url: "/updateaddable/"+name+"&"+value ,
+
+            success: window.location.href="http://"+host+":"+post+"/admin.html?tid="+tid+"&project="+projectName+"&uid="+uid
+
+        });
+    }
+
+
+function redirection () {
+
+    window.location.href="http://"+host+":"+post+"/index.html?tid="+tableid+"&project="+projectName+"&uid="+uid+"&userType=1";
+}
+</script>
+<div id="login"></div>
+    <div class="left">
+        Tables
+        <ul id="tables"></ul>
+		<button onclick="redirection()"><img src="../images/edit.png" align="absmiddle" style="width: 20px; height: 20px"> Edit Table Content</button>
+    </div>
+    <div class="right">
+        <input id = 'tid' type='input' style="display: none">
+        <table id="mytable">
+            <caption><div id = "tablename"></div></caption>
+            <thead>
+            <tr>
+                <th scope="col">Column Name</th>
+                <th scope="col">Modifiable</th>
+                <th scope="col">Type</th>
+                <th scope="col">Verification</th>
+                <th scope="col">defaultValue</th>
+                <th scope="col">Tag_reference</th>
+                <th scope="col">Reference_table</th>
+				<th scope="col">Reference_column</th>
+                <th scope="col">Image Field</th>
+            </tr>
+
+            </thead>
+            <tbody id="div1">
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>configuration</title>
+    <link rel="stylesheet" href="../slick.grid.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+    <link rel="stylesheet" href="examples.css" type="text/css"/>
+    <style type="text/css">
+        html,body
+        {
+            height: 100%;
+            margin: 0px;
+        }
+        .left
+        {
+            float: left;
+            height: 100%;
+            width: 10%;
+            background:#aaa;
+        }
+        .right
+        {
+            float: right;
+            height: 100%;
+            width: 90%;
+            background:#bbb;
+        }
+        .divtool
+        {
+            width: 100%;
+            height: 15%;
+            background:#aaa;
+        }
+        .divcomment
+        {
+            width: 100%;
+            height: 85%;
+            background:#bbb;
+        }
+    </style>
+</head>
+<body>
+
+<script src="../lib/jquery-1.7.min.js"></script>
+<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../lib/jquery.event.drag-2.2.js"></script>
+<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+<script src="../slick.core.js"></script>
+<script src="../plugins/slick.cellrangeselector.js"></script>
+<script src="../plugins/slick.cellselectionmodel.js"></script>
+<script src="../slick.formatters.js"></script>
+<script src="../slick.editors.js"></script>
+<script src="../slick.grid.js"></script>
+<script src="slick.compositeeditor.js"></script>
+<script>
+host = 'eddore.cs.st-andrews.ac.uk';
+//var host = 'localhost';
+var post = 18020;
+var projects = new Array();
+var userID;
+var userType;
+var tableNames = new Array;
+var uid;
+var projectN="";
+var proName;
+
+var pName = new Array();
+var pURL = new Array();
+var pRoot = new Array();
+var pPassword = new Array();
+var pDataName = new Array();
+
+
+
+function GetRequest() {
+
+    //get para from URL
+    var url = location.search;
+    var theRequest = new Object();
+    if (url.indexOf("?") != -1) {
+        var str = url.substr(1);
+        strs = str.split("&");
+        for (var i = 0; i < strs.length; i++) {
+            theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+        }
+    }
+    return theRequest;
+}
+   //main
+    window.onload=function()
+    {
+        $("#form").attr("style","display:none;");
+        $("#connect").attr("style","display:none;");
+        var Request = new Object();
+        Request = GetRequest();
+        if(Request['uid']!=undefined) {
+            uid = Request['uid'];
+        }
+        else{
+            uid=location.search.split("?")[1];
+        }
+        if(Request['projectName']!=undefined) {
+            projectN = Request['project'];
+            $("#updatetables").attr("style","display:none;");
+            $("#connect").attr("style","display:none;");
+            $("#form").attr("style","display:none;");
+            $("#test").attr("style","display:none;");
+            $("#redirection").attr("style","display:block;");
+            proName = Request['projectName'];
+            $("#name").val(proName);
+
+        }
+
+        userID = uid;
+        UID = uid;
+        if(!UID){
+            $( "#login").html('<p id = "out"><a href="/">Home</a> |<a href="/login">Log In</a></p>');
+        }else{
+            $( "#login").html('<p id="in"><a href="/configuration.html?'+UID+'">Home</a> |<a href="/account">Account</a> |<a href="/logout">Log Out</a></p>');
+            $.getJSON("../users.json",function(data){
+                $.each(data,function(infoIndex,json){
+
+                    if(json["UID"]==UID){
+                        userType = json["ifadmin"];
+                        projects = json["project"].split(",");
+                         for(var i = 0; i<projects.length; i++){
+                                     pName[i] =projects[i].split("(")[0];
+                                     var temp = projects[i].split("(")[1];
+                                     pURL[i] = temp.split(";")[0];
+                                     pRoot[i] = temp.split(";")[1];
+                                     pPassword[i] = temp.split(";")[2];
+                                     pDataName[i] = temp.split(";")[3].substring(0,temp.split(";")[3].length-1);
+                                     $( "#projects").append("<li><button onclick=\"getProject("+i+")\">"+pName[i]+"</button></li>");
+                         }
+                    }
+                })
+            });
+            }
+    }
+
+    var projectName;
+    function getProject(pid) {
+
+
+        $( "#projectname").html('');
+        var pro = projects[pid].split("(")[0];
+
+        if(pro == proName) {
+            $( "#name").val(pro);
+            $("#updatetables").attr("style","display:none;");
+            $("#connect").attr("style","display:none;");
+            $("#form").attr("style","display:none;");
+            $("#test").attr("style","display:none;");
+            $("#redirection").attr("style","display:block;");
+            $("#add").attr("style","display:none;");
+        }
+        else{
+            $("#updatetables").attr("style","display:none;");
+            $("#connect").attr("style","display:block;");
+            $("#form").attr("style","display:block;");
+            $("#test").attr("style","display:none;");
+            $("#redirection").attr("style","display:none;");
+            $("#add").attr("style","display:none;");
+            projectName = pro;
+            if(proName==undefined){
+                 proName =  $("#name").val();
+            }
+
+            $( "#projectname").append("<h3>Configure Project: "+pro+"</h3>");
+            if(pro=="axis"){
+                $("#databasename").val('project_axis');
+            }
+            else if(pro=="voyages"){
+                $("#databasename").val('project_axis');
+            }
+            $( "#name").val(pro);
+            $("#URL").val(pURL[pid]);
+            $("#user").val(pRoot[pid]);
+            $("#pw").val(pPassword[pid]);//'DH9CtM3.'
+            $("#databasename").val(pDataName[pid]);
+        }
+
+    }
+    function reSetUser() {
+        if($("#URL").val()=='localhost'){
+            $("#user").val('root');
+            $("#pw").val('root');
+        }
+        else if($("#URL").val()=='XCS2.host.cs.st-andrews.ac.uk') {
+            $("#user").val('xcs2');
+            $("#pw").val('DH9CtM3.');
+        }
+    }
+    function createProject (){
+
+        var name = $("#name").val();
+        var url = $("#URL").val();
+        var username = $("#user").val();
+        var pw = $("#pw").val();
+        var dbname = $("#databasename").val();
+        var projectJson;
+        var newproject;
+        var userproject;
+
+        $.getJSON("../users.json",function(data){
+            projectJson = data;
+            $.each(data,function(infoIndex,json){
+                if(json["UID"]==UID){
+
+                    json["project"] = json["project"]+","+name+"("+url+";"+username+";"+pw+";"+dbname+")";
+                    newproject = json["project"];
+                    userproject = UID;
+                }
+            })
+
+            $.ajax({
+
+                type: 'POST',
+                url: "/writeToJson/"+newproject+"&"+userproject,
+                success: alert("create seccessful")
+
+            })
+        });
+
+
+    }
+function finishedCreate(){alert("create seccessful");window.location.href="http://"+host+":"+post+"/configuration.html?uid="+userID+"&projectName="+proName;}
+    function getConnection(){
+        var url = $("#URL").val();
+        var username = $("#user").val();
+        var pw = $("#pw").val();
+        var dbname = $("#databasename").val();
+
+            $.ajax({
+
+                type: 'POST',
+
+
+                url: "/db/"+url+"&"+username+"&"+pw+"&"+dbname,
+
+               success:  $("#test").attr("style","display:block;")
+
+
+            })  ;
+
+
+    }
+    function TestSu() {
+        var databaseName = $("#databasename").val();
+        $.get("getconnectionstate",function(data,status){
+            if(data==0) {
+
+
+                alert("Connection to the database: \""+databaseName+"\"was successfully!");
+                $("#updatetables").attr("style","display:block;");
+                $("#add").attr("style","display:none;");
+
+
+            }
+            else{
+
+                alert("Warning! Connection to the database: \""+databaseName+"\"was unsuccessfully!");
+                $("#updatetables").attr("style","display:none;");
+                $("#add").attr("style","display:none;");
+                $("#test").attr("style","display:none;");
+
+            }
+        });
+
+    }
+    function sec() {
+        var databaseName = $("#databasename").val();
+
+
+        $.get("getconnectionstate",function(data,status){
+            alert(data)
+            if(data==0) {
+
+
+                        alert("Connection to the database: \""+databaseName+"\"was successfully!");
+                        $("#updatetables").attr("style","display:block;");
+
+
+
+            }
+            else{
+
+                        alert("Warning! Connection to the database: \""+databaseName+"\"was unsuccessfully!");
+                        $("#updatetables").attr("style","display:none;");
+
+            }
+        });
+
+    }
+    function UpdateTables() {
+
+        proName =  $("#name").val();
+        if(userType==0){
+            $.ajax({
+
+                type: 'POST',
+
+                url: "/configermysql/"+proName,
+
+                success:  window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+proName+"&tid=0"
+
+
+            });
+        }
+        else{
+            $.ajax({
+
+                type: 'POST',
+
+                url: "/configermysql/"+proName,
+
+                success: window.location.href="http://"+host+":"+post+"/admin.html?project="+proName+"&uid="+userID
+
+
+            });
+        }
+
+
+
+    }
+  function redirection () {
+      proName =  $("#name").val();
+      if(userType==0){
+          window.location.href="http://"+host+":"+post+"/index.html?uid="+userID+"&project="+proName+"&tid=0"
+
+
+
+      }else if(userType == 1) {
+          window.location.href="http://"+host+":"+post+"/admin.html?project="+proName+"&uid="+userID
+
+      }
+  }
+
+function showproject() {
+
+    $("#form").attr("style","display:block;");
+    $("#updatetables").attr("style","display:none;");
+    $("#add").attr("style","display:block;");
+    $("#connect").attr("style","display:none;");
+    $("#redirection").attr("style","display:none;");
+    redirection
+    $( "#projectname").html("");
+    $( "#projectname").append("<h3>Create Project</h3>");
+    $( "#name").val("");
+    $( "#name").removeAttr("disabled");
+    $("#URL").val("");
+    $("#user").val("");
+    $("#pw").val("");
+    $("#databasename").val("");
+}
+</script>
+<div id="login"></div>
+<div class="left">
+    Projects
+    <ul id="projects"></ul>
+    <div id = "creProject"><input type="button" onclick="showproject()" value="New Project"/></div>
+</div>
+<div class="right">
+<div style="width: 50%; height : 50%; margin: 0 auto;">
+    <div id = "form">
+    <input id = 'tid' type='input' style="display: none">
+    <table id="mytable">
+        <caption><div id = "projectname"></div></caption>
+
+        <tbody id="div1">
+        <tr><td>Project Name</td><td><input id = 'name' type='input' disabled></td></tr>
+        <tr><td>Database URL</td><td><input id = 'URL' type='input'onblur="reSetUser()"></td></tr>
+        <tr><td>Database User</td><td><input id = 'user' type='input'></td></tr>
+        <tr><td>Database password</td><td><input id = 'pw' type='input'></td></tr>
+        <tr><td>Database name</td><td><input id = 'databasename' type='input'></td></tr>
+        </tbody>
+    </table>
+        </div>
+    <div id = "connect"><input type="button" onclick="getConnection()" value="Connect"/></div>
+
+    <div id = "test" style="display: none;"><input type="button" onclick="TestSu()" value="Check Username and Password"/></div>
+    <div id = "updatetables" style="display: none;"><input type="button" onclick="UpdateTables()" value="Edit Database"/></div>
+    <div id = "conf" style="display: none;"><input type="button" onclick="UpdateTables()" value="Edit Database"/></div>
+    <div id = "add" style="display: none;"><input type="button" onclick="createProject()" value="Crete Project"/></div>
+    <div id = "redirection" style="display: none;"><input type="button" onclick="redirection()" value="Has been connected for this project, Go to Project"/></div>
+</div>
+</div>
+</body>
+</html>
